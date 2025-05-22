@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatForLoop() {
+        this.compare("for-before.py", "for-after.py");
+    }
+
+    @Test
     void shouldFormatMain() {
         this.compare("main-before.py", "main-after.py");
     }
