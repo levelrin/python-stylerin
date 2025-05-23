@@ -97,11 +97,37 @@ compound_stmt
 
 // NOTE: annotated_rhs may start with 'yield'; yield_expr must start with 'yield'
 assignment
+    // Original:
+    // : name ':' expression ('=' annotated_rhs )?
+    // | ('(' single_target ')'
+    //      | single_subscript_attribute_target) ':' expression ('=' annotated_rhs )?
+    // | (star_targets '=' )+ (yield_expr | star_expressions) TYPE_COMMENT?
+    // | single_target augassign (yield_expr | star_expressions);
+    : assignmentPartOne
+    | assignmentPartTwo
+    | assignmentPartThree
+    | assignmentPartFour
+    ;
+
+// We created this custom rule for easier parsing.
+assignmentPartOne
     : name ':' expression ('=' annotated_rhs )?
-    | ('(' single_target ')'
-         | single_subscript_attribute_target) ':' expression ('=' annotated_rhs )?
-    | (star_targets '=' )+ (yield_expr | star_expressions) TYPE_COMMENT?
-    | single_target augassign (yield_expr | star_expressions);
+    ;
+
+// We created this custom rule for easier parsing.
+assignmentPartTwo
+    : ('(' single_target ')' | single_subscript_attribute_target) ':' expression ('=' annotated_rhs )?
+    ;
+
+// We created this custom rule for easier parsing.
+assignmentPartThree
+    : (star_targets '=' )+ (yield_expr | star_expressions) TYPE_COMMENT?
+    ;
+
+// We created this custom rule for easier parsing.
+assignmentPartFour
+    : single_target augassign (yield_expr | star_expressions)
+    ;
 
 annotated_rhs: yield_expr | star_expressions;
 

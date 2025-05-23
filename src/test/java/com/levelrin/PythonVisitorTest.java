@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatIfStatements() {
+        this.compare("if-before.py", "if-after.py");
+    }
+
+    @Test
     void shouldFormatForLoop() {
         this.compare("for-before.py", "for-after.py");
     }
