@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatWhileLoop() {
+        this.compare("while-before.py", "while-after.py");
+    }
+
+    @Test
     void shouldFormatIfStatements() {
         this.compare("if-before.py", "if-after.py");
     }

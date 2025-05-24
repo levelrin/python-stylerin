@@ -83,7 +83,11 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     public String visitStatements(final PythonParser.StatementsContext context) {
         final List<PythonParser.StatementContext> statementContexts = context.statement();
         final StringBuilder text = new StringBuilder();
-        for (final PythonParser.StatementContext statementContext : statementContexts) {
+        for (int index = 0; index < statementContexts.size(); index++) {
+            final PythonParser.StatementContext statementContext = statementContexts.get(index);
+            if (index > 0) {
+                text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            }
             text.append(this.visit(statementContext));
         }
         return text.toString();
@@ -180,7 +184,91 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (assignmentPartThreeContext != null) {
             text.append(this.visit(assignmentPartThreeContext));
         } else if (assignmentPartFourContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAssignment -> assignmentPartFour");
+            text.append(this.visit(assignmentPartFourContext));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitAssignmentPartFour(final PythonParser.AssignmentPartFourContext context) {
+        final PythonParser.Single_targetContext singleTargetContext = context.single_target();
+        final PythonParser.AugassignContext augassignContext = context.augassign();
+        final PythonParser.Yield_exprContext yieldExprContext = context.yield_expr();
+        final PythonParser.Star_expressionsContext starExpressionsContext = context.star_expressions();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(singleTargetContext))
+            .append(' ')
+            .append(this.visit(augassignContext));
+        if (yieldExprContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAssignmentPartFour -> yield_expr");
+        } else if (starExpressionsContext != null) {
+            text.append(' ')
+                .append(this.visit(starExpressionsContext));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitAugassign(final PythonParser.AugassignContext context) {
+        final TerminalNode plusequalTerminal = context.PLUSEQUAL();
+        final TerminalNode minequalTerminal = context.MINEQUAL();
+        final TerminalNode starequalTerminal = context.STAREQUAL();
+        final TerminalNode atequalTerminal = context.ATEQUAL();
+        final TerminalNode slashequalTerminal = context.SLASHEQUAL();
+        final TerminalNode percentequalTerminal = context.PERCENTEQUAL();
+        final TerminalNode amperequalTerminal = context.AMPEREQUAL();
+        final TerminalNode vbarequalTerminal = context.VBAREQUAL();
+        final TerminalNode circumflexequalTerminal = context.CIRCUMFLEXEQUAL();
+        final TerminalNode leftshiftequalTerminal = context.LEFTSHIFTEQUAL();
+        final TerminalNode rightshiftequalTerminal = context.RIGHTSHIFTEQUAL();
+        final TerminalNode doublestarequalTerminal = context.DOUBLESTAREQUAL();
+        final TerminalNode doubleslashequalTerminal = context.DOUBLESLASHEQUAL();
+        final StringBuilder text = new StringBuilder();
+        if (plusequalTerminal != null) {
+            text.append(this.visit(plusequalTerminal));
+        } else if (minequalTerminal != null) {
+            text.append(this.visit(minequalTerminal));
+        } else if (starequalTerminal != null) {
+            text.append(this.visit(starequalTerminal));
+        } else if (atequalTerminal != null) {
+            text.append(this.visit(atequalTerminal));
+        } else if (slashequalTerminal != null) {
+            text.append(this.visit(slashequalTerminal));
+        } else if (percentequalTerminal != null) {
+            text.append(this.visit(percentequalTerminal));
+        } else if (amperequalTerminal != null) {
+            text.append(this.visit(amperequalTerminal));
+        } else if (vbarequalTerminal != null) {
+            text.append(this.visit(vbarequalTerminal));
+        } else if (circumflexequalTerminal != null) {
+            text.append(this.visit(circumflexequalTerminal));
+        } else if (leftshiftequalTerminal != null) {
+            text.append(this.visit(leftshiftequalTerminal));
+        } else if (rightshiftequalTerminal != null) {
+            text.append(this.visit(rightshiftequalTerminal));
+        } else if (doublestarequalTerminal != null) {
+            text.append(this.visit(doublestarequalTerminal));
+        } else if (doubleslashequalTerminal != null) {
+            text.append(this.visit(doubleslashequalTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSingle_target(final PythonParser.Single_targetContext context) {
+        final PythonParser.Single_subscript_attribute_targetContext singleSubscriptAttributeTargetContext = context.single_subscript_attribute_target();
+        final PythonParser.NameContext nameContext = context.name();
+        final TerminalNode lparTerminal = context.LPAR();
+        // todo: use `singleTargetContext` and `rparTerminal` with tests.
+        final PythonParser.Single_targetContext singleTargetContext = context.single_target();
+        final TerminalNode rparTerminal = context.RPAR();
+        final StringBuilder text = new StringBuilder();
+        if (singleSubscriptAttributeTargetContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSingle_target -> single_subscript_attribute_target");
+        } else if (nameContext != null) {
+            text.append(this.visit(nameContext));
+        } else if (lparTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSingle_target -> LPAR");
         }
         return text.toString();
     }
@@ -339,7 +427,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (gteBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> gte_bitwise_or");
         } else if (gtBitwiseOrContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> gt_bitwise_or");
+            text.append(this.visit(gtBitwiseOrContext));
         } else if (notinBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> notin_bitwise_or");
         } else if (inBitwiseOrContext != null) {
@@ -349,6 +437,17 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (isBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> is_bitwise_or");
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitGt_bitwise_or(final PythonParser.Gt_bitwise_orContext context) {
+        final TerminalNode greaterTerminal = context.GREATER();
+        final PythonParser.Bitwise_orContext bitwise_orContext = context.bitwise_or();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(greaterTerminal))
+            .append(' ')
+            .append(this.visit(bitwise_orContext));
         return text.toString();
     }
 
@@ -783,9 +882,28 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (tryStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> try_stmt");
         } else if (whileStmtContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> while_stmt");
+            text.append(this.visit(whileStmtContext));
         } else if (matchStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> match_stmt");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitWhile_stmt(final PythonParser.While_stmtContext context) {
+        final TerminalNode whileTerminal = context.WHILE();
+        final PythonParser.Named_expressionContext namedExpressionContext = context.named_expression();
+        final TerminalNode colonTerminal = context.COLON();
+        final PythonParser.BlockContext blockContext = context.block();
+        final PythonParser.Else_blockContext elseBlockContext = context.else_block();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(whileTerminal))
+            .append(' ')
+            .append(this.visit(namedExpressionContext))
+            .append(this.visit(colonTerminal))
+            .append(this.visit(blockContext));
+        if (elseBlockContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitWhile_stmt -> else_block");
         }
         return text.toString();
     }
