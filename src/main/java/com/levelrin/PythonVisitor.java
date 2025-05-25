@@ -1,11 +1,13 @@
 package com.levelrin;
 
+import com.levelrin.antlr.generated.PythonLexer;
 import com.levelrin.antlr.generated.PythonParser;
 import com.levelrin.antlr.generated.PythonParserBaseVisitor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -83,11 +85,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     public String visitStatements(final PythonParser.StatementsContext context) {
         final List<PythonParser.StatementContext> statementContexts = context.statement();
         final StringBuilder text = new StringBuilder();
-        for (int index = 0; index < statementContexts.size(); index++) {
-            final PythonParser.StatementContext statementContext = statementContexts.get(index);
-            if (index > 0) {
-                text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
-            }
+        for (final PythonParser.StatementContext statementContext : statementContexts) {
             text.append(this.visit(statementContext));
         }
         return text.toString();
@@ -417,7 +415,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final PythonParser.Is_bitwise_orContext isBitwiseOrContext = context.is_bitwise_or();
         final StringBuilder text = new StringBuilder();
         if (eqBitwiseOrContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> eq_bitwise_or");
+            text.append(this.visit(eqBitwiseOrContext));
         } else if (noteqBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> noteq_bitwise_or");
         } else if (lteBitwiseOrContext != null) {
@@ -437,6 +435,17 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (isBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> is_bitwise_or");
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitEq_bitwise_or(final PythonParser.Eq_bitwise_orContext context) {
+        final TerminalNode eqequalTerminal = context.EQEQUAL();
+        final PythonParser.Bitwise_orContext bitwise_orContext = context.bitwise_or();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(eqequalTerminal))
+            .append(' ')
+            .append(this.visit(bitwise_orContext));
         return text.toString();
     }
 
@@ -1217,15 +1226,31 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     public String visitTerminal(final TerminalNode node) {
         final int type = node.getSymbol().getType();
         final StringBuilder text = new StringBuilder();
-        if (type == 98) {
-            // newline token
+        boolean isIndentNext = false;
+        boolean isDedentNext = false;
+        int nextTokenIndex = node.getSymbol().getTokenIndex() + 1;
+        while (nextTokenIndex < this.tokens.size()) {
+            final Token nextToken = this.tokens.get(nextTokenIndex);
+            final int nextTokenType = nextToken.getType();
+            if (nextTokenType == PythonLexer.WS) {
+                // Skip WS tokens.
+                nextTokenIndex++;
+            } else {
+                isIndentNext = nextTokenType == PythonLexer.INDENT;
+                isDedentNext = nextTokenType == PythonLexer.DEDENT;
+                break;
+            }
+        }
+        if (type == PythonLexer.NEWLINE) {
             text.append('\n');
-        } else if (type == 2) {
-            // indent
+            if (!isIndentNext && !isDedentNext) {
+                // Add indentation for the next line.
+                text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            }
+        } else if (type == PythonLexer.INDENT) {
             this.currentIndentLevel++;
             text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
-        } else if (type == 3) {
-            // dedent
+        } else if (type == PythonLexer.DEDENT) {
             this.currentIndentLevel--;
             text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
         } else {

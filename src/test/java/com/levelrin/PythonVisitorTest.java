@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatContinueAndBreakStatements() {
+        this.compare("continue-break-before.py", "continue-break-after.py");
+    }
+
+    @Test
     void shouldFormatWhileLoop() {
         this.compare("while-before.py", "while-after.py");
     }
