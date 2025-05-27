@@ -622,7 +622,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final PythonParser.ArgumentsContext argumentsContext = context.arguments();
         final TerminalNode rparTerminal = context.RPAR();
         final TerminalNode lsqbTerminal = context.LSQB();
-        // todo: use `slicesContext` and `rsqbTerminal` with tests.
         final PythonParser.SlicesContext slicesContext = context.slices();
         final TerminalNode rsqbTerminal = context.RSQB();
         final PythonParser.AtomContext atomContext = context.atom();
@@ -640,10 +639,70 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                 }
                 text.append(this.visit(rparTerminal));
             } else if (lsqbTerminal != null) {
-                throw new UnsupportedOperationException("The following parsing path is not supported yet: visitPrimary -> LSQB");
+                text.append(this.visit(lsqbTerminal))
+                    .append(this.visit(slicesContext))
+                    .append(this.visit(rsqbTerminal));
             }
         } else if (atomContext != null) {
             text.append(this.visit(atomContext));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSlices(final PythonParser.SlicesContext context) {
+        final PythonParser.SliceContext sliceContext = context.slice();
+        final List<PythonParser.SliceOrStarredExpressionContext> sliceOrStarredExpressionContexts = context.sliceOrStarredExpression();
+        final List<TerminalNode> commaTerminals = context.COMMA();
+        final StringBuilder text = new StringBuilder();
+        if (sliceContext != null) {
+            text.append(this.visit(sliceContext));
+        } else {
+            // sliceOrStarredExpression (',' sliceOrStarredExpression)* ','?;
+            final PythonParser.SliceOrStarredExpressionContext firstSliceOrStarredExpressionContext = sliceOrStarredExpressionContexts.get(0);
+            text.append(this.visit(firstSliceOrStarredExpressionContext));
+            for (int index = 1; index < sliceOrStarredExpressionContexts.size(); index++) {
+                final PythonParser.SliceOrStarredExpressionContext sliceOrStarredExpressionContext = sliceOrStarredExpressionContexts.get(index);
+                final TerminalNode commaTerminal = commaTerminals.get(index - 1);
+                text.append(commaTerminal)
+                    .append(' ')
+                    .append(this.visit(sliceOrStarredExpressionContext));
+            }
+            if (sliceOrStarredExpressionContexts.size() == commaTerminals.size()) {
+                final TerminalNode commaTerminal = commaTerminals.get(sliceOrStarredExpressionContexts.size() - 1);
+                text.append(commaTerminal);
+            }
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSliceOrStarredExpression(final PythonParser.SliceOrStarredExpressionContext context) {
+        final PythonParser.SliceContext sliceContext = context.slice();
+        final PythonParser.Starred_expressionContext starredExpressionContext = context.starred_expression();
+        final StringBuilder text = new StringBuilder();
+        if (sliceContext != null) {
+            text.append(this.visit(sliceContext));
+        } else if (starredExpressionContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSliceOrStarredExpression -> starred_expression");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSlice(final PythonParser.SliceContext context) {
+        // todo: use `firstExpressionOfSliceContext` with tests.
+        final PythonParser.FirstExpressionOfSliceContext firstExpressionOfSliceContext = context.firstExpressionOfSlice();
+        final List<TerminalNode> colonTerminals = context.COLON();
+        // todo: use `secondExpressionOfSliceContext` and `thirdExpressionOfSliceContext` with tests.
+        final PythonParser.SecondExpressionOfSliceContext secondExpressionOfSliceContext = context.secondExpressionOfSlice();
+        final PythonParser.ThirdExpressionOfSliceContext thirdExpressionOfSliceContext = context.thirdExpressionOfSlice();
+        final PythonParser.Named_expressionContext namedExpressionContext = context.named_expression();
+        final StringBuilder text = new StringBuilder();
+        if (!colonTerminals.isEmpty()) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSlice -> COLON");
+        } else if (namedExpressionContext != null) {
+            text.append(this.visit(namedExpressionContext));
         }
         return text.toString();
     }
@@ -755,7 +814,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (genexpContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> genexp");
         } else if (listContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> list");
+            text.append(this.visit(listContext));
         } else if (listcompContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> listcomp");
         } else if (dictContext != null) {
@@ -768,6 +827,56 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> setcomp");
         } else if (ellipsesTerminal != null) {
             text.append(this.visit(ellipsesTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitList(final PythonParser.ListContext context) {
+        final TerminalNode lsqbTerminal = context.LSQB();
+        final PythonParser.Star_named_expressionsContext starNamedExpressionsContext = context.star_named_expressions();
+        final TerminalNode rsqbTerminal = context.RSQB();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(lsqbTerminal));
+        if (starNamedExpressionsContext != null) {
+            text.append(this.visit(starNamedExpressionsContext));
+        }
+        text.append(this.visit(rsqbTerminal));
+        return text.toString();
+    }
+
+    @Override
+    public String visitStar_named_expressions(final PythonParser.Star_named_expressionsContext context) {
+        final List<PythonParser.Star_named_expressionContext> starNamedExpressionsContexts = context.star_named_expression();
+        final List<TerminalNode> commaTerminals = context.COMMA();
+        final StringBuilder text = new StringBuilder();
+        final PythonParser.Star_named_expressionContext firstStarNamedExpressionContext = starNamedExpressionsContexts.get(0);
+        text.append(this.visit(firstStarNamedExpressionContext));
+        for (int index = 1; index < starNamedExpressionsContexts.size(); index++) {
+            final TerminalNode commaTerminal = commaTerminals.get(index - 1);
+            final PythonParser.Star_named_expressionContext starNamedExpressionContext = starNamedExpressionsContexts.get(index);
+            text.append(this.visit(commaTerminal))
+                .append(' ')
+                .append(this.visit(starNamedExpressionContext));
+        }
+        if (starNamedExpressionsContexts.size() == commaTerminals.size()) {
+            final TerminalNode commaTerminal = commaTerminals.get(commaTerminals.size() - 1);
+            text.append(this.visit(commaTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitStar_named_expression(final PythonParser.Star_named_expressionContext context) {
+        final TerminalNode starTerminal = context.STAR();
+        // todo: use `bitwiseOrContext` with tests.
+        final PythonParser.Bitwise_orContext bitwiseOrContext = context.bitwise_or();
+        final PythonParser.Named_expressionContext namedExpressionContext = context.named_expression();
+        final StringBuilder text = new StringBuilder();
+        if (starTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitStar_named_expression -> STAR");
+        } else if (namedExpressionContext != null) {
+            text.append(this.visit(namedExpressionContext));
         }
         return text.toString();
     }
@@ -912,7 +1021,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             .append(this.visit(colonTerminal))
             .append(this.visit(blockContext));
         if (elseBlockContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitWhile_stmt -> else_block");
+            text.append(this.visit(elseBlockContext));
         }
         return text.toString();
     }
@@ -1015,7 +1124,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         }
         text.append(this.visit(blockContext));
         if (elseBlockContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFor_stmt -> else_block");
+            text.append(this.visit(elseBlockContext));
         }
         return text.toString();
     }
@@ -1249,10 +1358,14 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             }
         } else if (type == PythonLexer.INDENT) {
             this.currentIndentLevel++;
-            text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            if (!isIndentNext) {
+                text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            }
         } else if (type == PythonLexer.DEDENT) {
             this.currentIndentLevel--;
-            text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            if (!isDedentNext) {
+                text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
+            }
         } else {
             text.append(node.getText());
         }

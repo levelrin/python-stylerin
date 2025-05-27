@@ -96,13 +96,14 @@ compound_stmt
 // =================
 
 // NOTE: annotated_rhs may start with 'yield'; yield_expr must start with 'yield'
+// Original:
+// assignment
+//     : name ':' expression ('=' annotated_rhs )?
+//     | ('(' single_target ')'
+//          | single_subscript_attribute_target) ':' expression ('=' annotated_rhs )?
+//     | (star_targets '=' )+ (yield_expr | star_expressions) TYPE_COMMENT?
+//     | single_target augassign (yield_expr | star_expressions);
 assignment
-    // Original:
-    // : name ':' expression ('=' annotated_rhs )?
-    // | ('(' single_target ')'
-    //      | single_subscript_attribute_target) ':' expression ('=' annotated_rhs )?
-    // | (star_targets '=' )+ (yield_expr | star_expressions) TYPE_COMMENT?
-    // | single_target augassign (yield_expr | star_expressions);
     : assignmentPartOne
     | assignmentPartTwo
     | assignmentPartThree
@@ -658,14 +659,41 @@ primary
     ;
 
 
-
+// Original:
+// slices
+//     : slice
+//     | (slice | starred_expression) (',' (slice | starred_expression))* ','?;
 slices
     : slice
-    | (slice | starred_expression) (',' (slice | starred_expression))* ','?;
+    | sliceOrStarredExpression (',' sliceOrStarredExpression)* ','?;
 
+// We created this custom rule for easier parsing.
+sliceOrStarredExpression
+    : slice | starred_expression
+    ;
+
+// Original:
+// slice
+//     : expression? ':' expression? (':' expression? )?
+//     | named_expression;
 slice
-    : expression? ':' expression? (':' expression? )?
+    : firstExpressionOfSlice? ':' secondExpressionOfSlice? (':' thirdExpressionOfSlice? )?
     | named_expression;
+
+// We created this custom rule for easier parsing.
+firstExpressionOfSlice
+    : expression
+    ;
+
+// We created this custom rule for easier parsing.
+secondExpressionOfSlice
+    : expression
+    ;
+
+// We created this custom rule for easier parsing.
+thirdExpressionOfSlice
+    : expression
+    ;
 
 atom
     : name
@@ -748,10 +776,12 @@ fstring
     : FSTRING_START fstring_middle* FSTRING_END;
 
 string: STRING;
+
+// Original:
+// strings
+//     : (fstring|string)+
+//     ;
 strings
-    // Original:
-    // : (fstring|string)+
-    // ;
     : fstringOrString+
     ;
 
@@ -810,10 +840,11 @@ dictcomp
 arguments
     : args ','?;
 
+// Original:
+// args
+//     : (starred_expression | ( assignment_expression | expression)) (',' (starred_expression | ( assignment_expression | expression)))* (',' kwargs )?
+//     | kwargs;
 args
-    // Original:
-    // : (starred_expression | ( assignment_expression | expression)) (',' (starred_expression | ( assignment_expression | expression)))* (',' kwargs )?
-    // | kwargs;
     : firstPartOfArgs secondPartOfArgs* (',' kwargs )?
     | kwargs;
 

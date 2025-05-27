@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatElseClauseInLoop() {
+        this.compare("else-loop-before.py", "else-loop-after.py");
+    }
+
+    @Test
     void shouldFormatContinueAndBreakStatements() {
         this.compare("continue-break-before.py", "continue-break-after.py");
     }
