@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatPassStatement() {
+        this.compare("pass-before.py", "pass-after.py");
+    }
+
+    @Test
     void shouldFormatElseClauseInLoop() {
         this.compare("else-loop-before.py", "else-loop-after.py");
     }

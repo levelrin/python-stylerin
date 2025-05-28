@@ -615,7 +615,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     public String visitPrimary(final PythonParser.PrimaryContext context) {
         final PythonParser.PrimaryContext primaryContext = context.primary();
         final TerminalNode dotTerminal = context.DOT();
-        // todo: use `nameContext` with tests.
         final PythonParser.NameContext nameContext = context.name();
         final PythonParser.GenexpContext genexpContext = context.genexp();
         final TerminalNode lparTerminal = context.LPAR();
@@ -629,7 +628,8 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         if (primaryContext != null) {
             text.append(this.visit(primaryContext));
             if (dotTerminal != null) {
-                throw new UnsupportedOperationException("The following parsing path is not supported yet: visitPrimary -> DOT");
+                text.append(this.visit(dotTerminal))
+                    .append(this.visit(nameContext));
             } else if (genexpContext != null) {
                 throw new UnsupportedOperationException("The following parsing path is not supported yet: visitPrimary -> genexp");
             } else if (lparTerminal != null) {
@@ -992,7 +992,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (ifStmtContext != null) {
             text.append(this.visit(ifStmtContext));
         } else if (classDefContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> class_def");
+            text.append(this.visit(classDefContext));
         } else if (withStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> with_stmt");
         } else if (forStmtContext != null) {
@@ -1004,6 +1004,45 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (matchStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> match_stmt");
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitClass_def(final PythonParser.Class_defContext context) {
+        final PythonParser.DecoratorsContext decoratorsContext = context.decorators();
+        final PythonParser.Class_def_rawContext classDefRawContext = context.class_def_raw();
+        final StringBuilder text = new StringBuilder();
+        if (decoratorsContext == null) {
+            text.append(this.visit(classDefRawContext));
+        } else {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def -> decorators");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitClass_def_raw(final PythonParser.Class_def_rawContext context) {
+        final TerminalNode classTerminal = context.CLASS();
+        final PythonParser.NameContext nameContext = context.name();
+        final PythonParser.Type_paramsContext typeParamsContext = context.type_params();
+        final TerminalNode lparTerminal = context.LPAR();
+        // todo: use `argumentsContext` and `rparTerminal` with tests.
+        final PythonParser.ArgumentsContext argumentsContext = context.arguments();
+        final TerminalNode rparTerminal = context.RPAR();
+        final TerminalNode colonTerminal = context.COLON();
+        final PythonParser.BlockContext blockContext = context.block();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(classTerminal))
+            .append(' ')
+            .append(this.visit(nameContext));
+        if (typeParamsContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def_raw -> type_params");
+        }
+        if (lparTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def_raw -> LPAR");
+        }
+        text.append(this.visit(colonTerminal))
+            .append(this.visit(blockContext));
         return text.toString();
     }
 
@@ -1221,8 +1260,8 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         if (decoratorsContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFunction_def -> decorators");
         } else {
-            text.append(this.visit(functionDefRawContext));
-            this.appendNewLinesAndIndent(text, 2);
+            text.append(this.visit(functionDefRawContext))
+                .append("\n\n");
         }
         return text.toString();
     }
@@ -1255,7 +1294,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         }
         text.append(this.visit(lparTerminal));
         if (paramsContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFunction_def_raw -> params");
+            text.append(this.visit(paramsContext));
         }
         text.append(this.visit(rparTerminal));
         if (rarrowTerminal != null) {
@@ -1266,6 +1305,82 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFunction_def_raw -> func_type_comment");
         }
         text.append(this.visit(blockContext));
+        return text.toString();
+    }
+
+    @Override
+    public String visitParams(final PythonParser.ParamsContext context) {
+        final PythonParser.ParametersContext parametersContext = context.parameters();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(parametersContext));
+        return text.toString();
+    }
+
+    @Override
+    public String visitParameters(final PythonParser.ParametersContext context) {
+        final PythonParser.FirstPartOfParametersContext firstPartOfParametersContext = context.firstPartOfParameters();
+        final PythonParser.SecondPartOfParametersContext secondPartOfParametersContext = context.secondPartOfParameters();
+        final PythonParser.ThirdPartOfParametersContext thirdPartOfParametersContext = context.thirdPartOfParameters();
+        final PythonParser.FourthPartOfParametersContext fourthPartOfParametersContext = context.fourthPartOfParameters();
+        final PythonParser.FifthPartOfParametersContext fifthPartOfParametersContext = context.fifthPartOfParameters();
+        final StringBuilder text = new StringBuilder();
+        if (firstPartOfParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParameters -> firstPartOfParameters");
+        } else if (secondPartOfParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParameters -> secondPartOfParameters");
+        } else if (thirdPartOfParametersContext != null) {
+            text.append(this.visit(thirdPartOfParametersContext));
+        } else if (fourthPartOfParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParameters -> fourthPartOfParameters");
+        } else if (fifthPartOfParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParameters -> fifthPartOfParameters");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitThirdPartOfParameters(final PythonParser.ThirdPartOfParametersContext context) {
+        final List<PythonParser.Param_no_defaultContext> paramNoDefaultContexts = context.param_no_default();
+        final List<PythonParser.Param_with_defaultContext> paramWithDefaultContexts = context.param_with_default();
+        final PythonParser.Star_etcContext starEtcContext = context.star_etc();
+        final StringBuilder text = new StringBuilder();
+        for (final PythonParser.Param_no_defaultContext paramNoDefaultContext : paramNoDefaultContexts) {
+            text.append(this.visit(paramNoDefaultContext));
+        }
+        if (!paramWithDefaultContexts.isEmpty()) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitThirdPartOfParameters -> param_with_default");
+        }
+        if (starEtcContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitThirdPartOfParameters -> star_etc");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitParam_no_default(final PythonParser.Param_no_defaultContext context) {
+        final PythonParser.ParamContext paramContext = context.param();
+        final TerminalNode commaTerminal = context.COMMA();
+        final TerminalNode typeCommentTerminal = context.TYPE_COMMENT();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(paramContext));
+        if (commaTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParam_no_default -> COMMA");
+        }
+        if (typeCommentTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParam_no_default -> TYPE_COMMENT");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitParam(final PythonParser.ParamContext context) {
+        final PythonParser.NameContext nameContext = context.name();
+        final PythonParser.AnnotationContext annotationContext = context.annotation();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(nameContext));
+        if (annotationContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParam -> annotation");
+        }
         return text.toString();
     }
 
@@ -1381,17 +1496,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                 node.getText()
             )
         );
-    }
-
-    /**
-     * We use this to add new lines with appropriate indentations.
-     *
-     * @param text We will append the new lines and indentations into this.
-     * @param newLines Number of new lines before appending indentations.
-     */
-    private void appendNewLinesAndIndent(final StringBuilder text, final int newLines) {
-        text.append("\n".repeat(newLines))
-            .append(INDENT_UNIT.repeat(this.currentIndentLevel));
     }
 
 }

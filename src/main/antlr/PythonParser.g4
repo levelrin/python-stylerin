@@ -232,12 +232,44 @@ function_def_raw
 params
     : parameters;
 
+// Original:
+// parameters
+//    : slash_no_default param_no_default* param_with_default* star_etc?
+//    | slash_with_default param_with_default* star_etc?
+//    | param_no_default+ param_with_default* star_etc?
+//    | param_with_default+ star_etc?
+//    | star_etc;
 parameters
+    : firstPartOfParameters
+    | secondPartOfParameters
+    | thirdPartOfParameters
+    | fourthPartOfParameters
+    | fifthPartOfParameters;
+
+// We created this custom rule for easier parsing.
+firstPartOfParameters
     : slash_no_default param_no_default* param_with_default* star_etc?
-    | slash_with_default param_with_default* star_etc?
-    | param_no_default+ param_with_default* star_etc?
-    | param_with_default+ star_etc?
-    | star_etc;
+    ;
+
+// We created this custom rule for easier parsing.
+secondPartOfParameters
+    : slash_with_default param_with_default* star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+thirdPartOfParameters
+    : param_no_default+ param_with_default* star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+fourthPartOfParameters
+    : param_with_default+ star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+fifthPartOfParameters
+    : star_etc
+    ;
 
 // Some duplication here because we can't write (',' | {isCurrentTokenType(RPAR)}?),
 // which is because we don't support empty alternatives (yet).
