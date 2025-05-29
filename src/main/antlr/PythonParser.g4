@@ -755,12 +755,45 @@ lambda_params
 // or type comments, and if there's no comma after a parameter, we expect
 // a colon, not a close parenthesis.  (For more, see parameters above.)
 //
+// Original:
+// lambda_parameters
+//    : lambda_slash_no_default lambda_param_no_default* lambda_param_with_default* lambda_star_etc?
+//    | lambda_slash_with_default lambda_param_with_default* lambda_star_etc?
+//    | lambda_param_no_default+ lambda_param_with_default* lambda_star_etc?
+//    | lambda_param_with_default+ lambda_star_etc?
+//    | lambda_star_etc;
 lambda_parameters
+    : firstPartOfLambdaParameters
+    | secondPartOfLambdaParameters
+    | thirdPartOfLambdaParameters
+    | fourthPartOfLambdaParameters
+    | fifthPartOfLambdaParameters
+    ;
+
+// We created this custom rule for easier parsing.
+firstPartOfLambdaParameters
     : lambda_slash_no_default lambda_param_no_default* lambda_param_with_default* lambda_star_etc?
-    | lambda_slash_with_default lambda_param_with_default* lambda_star_etc?
-    | lambda_param_no_default+ lambda_param_with_default* lambda_star_etc?
-    | lambda_param_with_default+ lambda_star_etc?
-    | lambda_star_etc;
+    ;
+
+// We created this custom rule for easier parsing.
+secondPartOfLambdaParameters
+    : lambda_slash_with_default lambda_param_with_default* lambda_star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+thirdPartOfLambdaParameters
+    : lambda_param_no_default+ lambda_param_with_default* lambda_star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+fourthPartOfLambdaParameters
+    : lambda_param_with_default+ lambda_star_etc?
+    ;
+
+// We created this custom rule for easier parsing.
+fifthPartOfLambdaParameters
+    : lambda_star_etc
+    ;
 
 lambda_slash_no_default
     : lambda_param_no_default+ '/' ','?

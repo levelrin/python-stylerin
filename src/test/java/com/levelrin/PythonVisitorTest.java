@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatLambda() {
+        this.compare("lambda-before.py", "lambda-after.py");
+    }
+
+    @Test
     void shouldFormatPassStatement() {
         this.compare("pass-before.py", "pass-after.py");
     }

@@ -143,7 +143,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (starExpressionsContext != null) {
             text.append(this.visit(starExpressionsContext));
         } else if (returnStmtContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> return_stmt");
+            text.append(this.visit(returnStmtContext));
         } else if (importStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> import_stmt");
         } else if (raiseStmtContext != null) {
@@ -164,6 +164,19 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> global_stmt");
         } else if (nonlocalStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> nonlocal_stmt");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitReturn_stmt(final PythonParser.Return_stmtContext context) {
+        final TerminalNode returnTerminal = context.RETURN();
+        final PythonParser.Star_expressionsContext starExpressionsContext = context.star_expressions();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(returnTerminal));
+        if (starExpressionsContext != null) {
+            text.append(' ')
+                .append(this.visit(starExpressionsContext));
         }
         return text.toString();
     }
@@ -342,8 +355,98 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                 throw new UnsupportedOperationException("The following parsing path is not supported yet: visitExpression -> IF");
             }
         } else {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitExpression -> lambdef");
+            text.append(this.visit(lambdefContext));
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitLambdef(final PythonParser.LambdefContext context) {
+        final TerminalNode lambdaTerminal = context.LAMBDA();
+        final PythonParser.Lambda_paramsContext lambdaParamsContext = context.lambda_params();
+        final TerminalNode colonTerminal = context.COLON();
+        final PythonParser.ExpressionContext expressionContext = context.expression();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(lambdaTerminal));
+        if (lambdaParamsContext != null) {
+            text.append(' ')
+                .append(this.visit(lambdaParamsContext));
+        }
+        text.append(this.visit(colonTerminal))
+            .append(' ')
+            .append(this.visit(expressionContext));
+        return text.toString();
+    }
+
+    @Override
+    public String visitLambda_params(final PythonParser.Lambda_paramsContext context) {
+        final PythonParser.Lambda_parametersContext lambdaParametersContext = context.lambda_parameters();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(lambdaParametersContext));
+        return text.toString();
+    }
+
+    @Override
+    public String visitLambda_parameters(final PythonParser.Lambda_parametersContext context) {
+        final PythonParser.FirstPartOfLambdaParametersContext firstPartOfLambdaParametersContext = context.firstPartOfLambdaParameters();
+        final PythonParser.SecondPartOfLambdaParametersContext secondPartOfLambdaParametersContext = context.secondPartOfLambdaParameters();
+        final PythonParser.ThirdPartOfLambdaParametersContext thirdPartOfLambdaParametersContext = context.thirdPartOfLambdaParameters();
+        final PythonParser.FourthPartOfLambdaParametersContext fourthPartOfLambdaParametersContext = context.fourthPartOfLambdaParameters();
+        final PythonParser.FifthPartOfLambdaParametersContext fifthPartOfLambdaParametersContext = context.fifthPartOfLambdaParameters();
+        final StringBuilder text = new StringBuilder();
+        if (firstPartOfLambdaParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitLambda_parameters -> firstPartOfLambdaParameters");
+        } else if (secondPartOfLambdaParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitLambda_parameters -> secondPartOfLambdaParameters");
+        } else if (thirdPartOfLambdaParametersContext != null) {
+            text.append(this.visit(thirdPartOfLambdaParametersContext));
+        } else if (fourthPartOfLambdaParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitLambda_parameters -> fourthPartOfLambdaParameters");
+        } else if (fifthPartOfLambdaParametersContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitLambda_parameters -> fifthPartOfLambdaParameters");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitThirdPartOfLambdaParameters(final PythonParser.ThirdPartOfLambdaParametersContext context) {
+        final List<PythonParser.Lambda_param_no_defaultContext> lambdaParamNoDefaultContexts = context.lambda_param_no_default();
+        final List<PythonParser.Lambda_param_with_defaultContext> lambdaParamWithDefaultContexts = context.lambda_param_with_default();
+        final PythonParser.Lambda_star_etcContext lambdaStarEtcContext = context.lambda_star_etc();
+        final StringBuilder text = new StringBuilder();
+        for (int index = 0; index < lambdaParamNoDefaultContexts.size(); index++) {
+            final PythonParser.Lambda_param_no_defaultContext lambdaParamNoDefaultContext = lambdaParamNoDefaultContexts.get(index);
+            text.append(this.visit(lambdaParamNoDefaultContext));
+            if (index < lambdaParamNoDefaultContexts.size() - 1) {
+                text.append(' ');
+            }
+        }
+        if (!lambdaParamWithDefaultContexts.isEmpty()) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitThirdPartOfLambdaParameters -> lambda_param_with_default");
+        }
+        if (lambdaStarEtcContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitThirdPartOfLambdaParameters -> lambda_star_etc");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitLambda_param_no_default(final PythonParser.Lambda_param_no_defaultContext context) {
+        final PythonParser.Lambda_paramContext lambdaParamContext = context.lambda_param();
+        final TerminalNode commaTerminal = context.COMMA();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(lambdaParamContext));
+        if (commaTerminal != null) {
+            text.append(this.visit(commaTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitLambda_param(final PythonParser.Lambda_paramContext context) {
+        final PythonParser.NameContext nameContext = context.name();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(nameContext));
         return text.toString();
     }
 
@@ -535,7 +638,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     @Override
     public String visitSum(final PythonParser.SumContext context) {
         final PythonParser.SumContext sumContext = context.sum();
-        // todo: use `plusTerminal` and `minusTerminal` with tests.
         final TerminalNode plusTerminal = context.PLUS();
         final TerminalNode minusTerminal = context.MINUS();
         final PythonParser.TermContext termContext = context.term();
@@ -543,7 +645,15 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         if (sumContext == null) {
             text.append(this.visit(termContext));
         } else {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSum -> sum");
+            text.append(this.visit(sumContext))
+                .append(' ');
+            if (plusTerminal != null) {
+                text.append(this.visit(plusTerminal));
+            } else if (minusTerminal != null) {
+                text.append(this.visit(minusTerminal));
+            }
+            text.append(' ')
+                .append(this.visit(termContext));
         }
         return text.toString();
     }
@@ -1344,8 +1454,12 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final List<PythonParser.Param_with_defaultContext> paramWithDefaultContexts = context.param_with_default();
         final PythonParser.Star_etcContext starEtcContext = context.star_etc();
         final StringBuilder text = new StringBuilder();
-        for (final PythonParser.Param_no_defaultContext paramNoDefaultContext : paramNoDefaultContexts) {
+        for (int index = 0; index < paramNoDefaultContexts.size(); index++) {
+            final PythonParser.Param_no_defaultContext paramNoDefaultContext = paramNoDefaultContexts.get(index);
             text.append(this.visit(paramNoDefaultContext));
+            if (index < paramNoDefaultContexts.size() - 1) {
+                text.append(' ');
+            }
         }
         if (!paramWithDefaultContexts.isEmpty()) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitThirdPartOfParameters -> param_with_default");
@@ -1364,7 +1478,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final StringBuilder text = new StringBuilder();
         text.append(this.visit(paramContext));
         if (commaTerminal != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParam_no_default -> COMMA");
+            text.append(this.visit(commaTerminal));
         }
         if (typeCommentTerminal != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitParam_no_default -> TYPE_COMMENT");
