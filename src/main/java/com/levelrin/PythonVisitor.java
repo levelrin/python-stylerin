@@ -3,6 +3,8 @@ package com.levelrin;
 import com.levelrin.antlr.generated.PythonLexer;
 import com.levelrin.antlr.generated.PythonParser;
 import com.levelrin.antlr.generated.PythonParserBaseVisitor;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1370,8 +1372,56 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         if (decoratorsContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFunction_def -> decorators");
         } else {
-            text.append(this.visit(functionDefRawContext))
-                .append("\n\n");
+            final String functionDefRawText = this.visit(functionDefRawContext);
+            // If `functionDefRawText` ends with comment lines, we need to insert two line breaks before them.
+            // For example:
+            // ```py
+            // def main():
+            //     # tres
+            //     print("three")
+            //     # cuatro
+            //     print("four")
+            // # cinco
+            // # extra
+            // ```
+            // The above should be modified to this:
+            // ```py
+            // def main():
+            //     # tres
+            //     print("three")
+            //     # cuatro
+            //     print("four")
+            //
+            //
+            // # cinco
+            // # extra
+            // ```
+            final List<String> lines = new ArrayList<>(
+                Arrays.asList(
+                    functionDefRawText.split("\n")
+                )
+            );
+            boolean endsWithComments = false;
+            for (int index = lines.size() - 1; index >= 0; index--) {
+                if (index > 0) {
+                    final String trimmedPreviousLine = lines.get(index - 1).trim();
+                    if (trimmedPreviousLine.startsWith("#")) {
+                        endsWithComments = true;
+                    } else if (endsWithComments) {
+                        // One more line break will be added by the String.join() below.
+                        lines.add(index, "\n");
+                        break;
+                    }
+                }
+            }
+            if (endsWithComments) {
+                text.append(String.join("\n", lines))
+                    // Restore the last line break removed by the split before.
+                    .append('\n');
+            } else {
+                text.append(functionDefRawText)
+                    .append("\n\n");
+            }
         }
         return text.toString();
     }
@@ -1562,40 +1612,65 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
 
     @Override
     public String visitTerminal(final TerminalNode node) {
-        final int type = node.getSymbol().getType();
+        final Token token = node.getSymbol();
+        final int tokenIndex = token.getTokenIndex();
+        final int commentChannel = 3;
+        final List<Token> comments = this.tokens.getHiddenTokensToLeft(tokenIndex, commentChannel);
+        final int type = token.getType();
         final StringBuilder text = new StringBuilder();
-        boolean isIndentNext = false;
-        boolean isDedentNext = false;
-        int nextTokenIndex = node.getSymbol().getTokenIndex() + 1;
+        int nextIndentCount = 0;
+        int nextDedentCount = 0;
+        int nextTokenIndex = token.getTokenIndex() + 1;
+        // Check if the next token is indent or dedent.
+        // Ignore WS in between.
         while (nextTokenIndex < this.tokens.size()) {
             final Token nextToken = this.tokens.get(nextTokenIndex);
             final int nextTokenType = nextToken.getType();
             if (nextTokenType == PythonLexer.WS) {
                 // Skip WS tokens.
                 nextTokenIndex++;
+            } else if (nextTokenType == PythonLexer.INDENT) {
+                nextIndentCount++;
+                nextTokenIndex++;
+            } else if (nextTokenType == PythonLexer.DEDENT) {
+                nextDedentCount++;
+                nextTokenIndex++;
             } else {
-                isIndentNext = nextTokenType == PythonLexer.INDENT;
-                isDedentNext = nextTokenType == PythonLexer.DEDENT;
                 break;
             }
         }
         if (type == PythonLexer.NEWLINE) {
+            if (comments != null) {
+                for (final Token comment : comments) {
+                    text.append('\n');
+                    text.append(INDENT_UNIT.repeat(this.currentIndentLevel + nextIndentCount - nextDedentCount));
+                    text.append(comment.getText());
+                }
+            }
             text.append('\n');
-            if (!isIndentNext && !isDedentNext) {
+            if (nextIndentCount == 0 && nextDedentCount == 0) {
                 // Add indentation for the next line.
                 text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
             }
         } else if (type == PythonLexer.INDENT) {
             this.currentIndentLevel++;
-            if (!isIndentNext) {
+            if (nextIndentCount == 0) {
                 text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
             }
         } else if (type == PythonLexer.DEDENT) {
             this.currentIndentLevel--;
-            if (!isDedentNext) {
+            if (nextDedentCount == 0) {
                 text.append(INDENT_UNIT.repeat(this.currentIndentLevel));
             }
         } else {
+            // It's the case where the file begins with comments.
+            if (comments != null) {
+                for (final Token comment : comments) {
+                    text.append(comment.getText());
+                    text.append('\n')
+                        .append(INDENT_UNIT.repeat(this.currentIndentLevel));
+                }
+            }
             text.append(node.getText());
         }
         return text.toString();

@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatComments() {
+        this.compare("comment-before.py", "comment-after.py");
+    }
+
+    @Test
     void shouldFormatLambda() {
         this.compare("lambda-before.py", "lambda-after.py");
     }

@@ -161,7 +161,7 @@ STRING
 NEWLINE : '\r'? '\n'; // Unix, Windows
 
 // https://docs.python.org/3.13/reference/lexical_analysis.html#comments
-COMMENT : '#' ~[\r\n]*                    -> channel(HIDDEN);
+COMMENT : '#' ~[\r\n]*                    -> channel(3);
 
 // https://docs.python.org/3.13/reference/lexical_analysis.html#whitespace-between-tokens
 WS : [ \t\f]+                             -> channel(HIDDEN);
