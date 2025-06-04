@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -277,11 +278,31 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final TerminalNode rparTerminal = context.RPAR();
         final StringBuilder text = new StringBuilder();
         if (singleSubscriptAttributeTargetContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSingle_target -> single_subscript_attribute_target");
+            text.append(this.visit(singleSubscriptAttributeTargetContext));
         } else if (nameContext != null) {
             text.append(this.visit(nameContext));
         } else if (lparTerminal != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSingle_target -> LPAR");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSingle_subscript_attribute_target(final PythonParser.Single_subscript_attribute_targetContext context) {
+        final PythonParser.T_primaryContext tPrimaryContext = context.t_primary();
+        final TerminalNode dotTerminal = context.DOT();
+        final PythonParser.NameContext nameContext = context.name();
+        final TerminalNode lsqbTerminal = context.LSQB();
+        // todo: use `slicesContext` and `rsqbTerminal` with tests.
+        final PythonParser.SlicesContext slicesContext = context.slices();
+        final TerminalNode rsqbTerminal = context.RSQB();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(tPrimaryContext));
+        if (dotTerminal != null) {
+            text.append(this.visit(dotTerminal))
+                .append(this.visit(nameContext));
+        } else if (lsqbTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSingle_subscript_attribute_target -> LSQB");
         }
         return text.toString();
     }
@@ -1154,6 +1175,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def_raw -> LPAR");
         }
         text.append(this.visit(colonTerminal))
+            .append('\n')
             .append(this.visit(blockContext));
         return text.toString();
     }
@@ -1319,18 +1341,47 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     @Override
     public String visitTarget_with_star_atom(final PythonParser.Target_with_star_atomContext context) {
         final PythonParser.T_primaryContext tPrimaryContext = context.t_primary();
-        // todo: use `dotTerminal`, `nameContext`, `lsqbTerminal`, `slicesContext`, and `rsqbTerminal` with tests.
         final TerminalNode dotTerminal = context.DOT();
         final PythonParser.NameContext nameContext = context.name();
         final TerminalNode lsqbTerminal =  context.LSQB();
+        // todo: use `slicesContext`, and `rsqbTerminal` with tests.
         final PythonParser.SlicesContext slicesContext = context.slices();
         final TerminalNode rsqbTerminal = context.RSQB();
         final PythonParser.Star_atomContext starAtomContext = context.star_atom();
         final StringBuilder text = new StringBuilder();
         if (tPrimaryContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitTarget_with_star_atom -> t_primary");
+            text.append(this.visit(tPrimaryContext));
+            if (dotTerminal != null) {
+                text.append(this.visit(dotTerminal))
+                    .append(this.visit(nameContext));
+            } else if (lsqbTerminal != null) {
+                throw new UnsupportedOperationException("The following parsing path is not supported yet: visitTarget_with_star_atom -> lsqbTerminal");
+            }
         } else if (starAtomContext != null) {
             text.append(this.visit(starAtomContext));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitT_primary(final PythonParser.T_primaryContext context) {
+        final PythonParser.T_primaryContext tPrimaryContext = context.t_primary();
+        // todo: use `dotTerminal`, `nameContext`, `lsqbTerminal`, `slicesContext`, `rsqbTerminal`, `genexpContext`, `lparTerminal`, `argumentsContext`, and `rparTerminal` with tests.
+        final TerminalNode dotTerminal = context.DOT();
+        final PythonParser.NameContext nameContext = context.name();
+        final TerminalNode lsqbTerminal =  context.LSQB();
+        final PythonParser.SlicesContext slicesContext = context.slices();
+        final TerminalNode rsqbTerminal = context.RSQB();
+        final PythonParser.GenexpContext genexpContext = context.genexp();
+        final TerminalNode lparTerminal = context.LPAR();
+        final PythonParser.ArgumentsContext argumentsContext = context.arguments();
+        final TerminalNode rparTerminal = context.RPAR();
+        final PythonParser.AtomContext atomContext = context.atom();
+        final StringBuilder text = new StringBuilder();
+        if (tPrimaryContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitT_primary -> t_primary");
+        } else if (atomContext != null) {
+            text.append(this.visit(atomContext));
         }
         return text.toString();
     }
@@ -1373,7 +1424,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFunction_def -> decorators");
         } else {
             final String functionDefRawText = this.visit(functionDefRawContext);
-            // If `functionDefRawText` ends with comment lines, we need to insert two line breaks before them.
+            // If `functionDefRawText` ends with comment lines, we need to insert one line break before them.
             // For example:
             // ```py
             // def main():
@@ -1392,7 +1443,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             //     # cuatro
             //     print("four")
             //
-            //
             // # cinco
             // # extra
             // ```
@@ -1408,8 +1458,9 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                     if (trimmedPreviousLine.startsWith("#")) {
                         endsWithComments = true;
                     } else if (endsWithComments) {
-                        // One more line break will be added by the String.join() below.
-                        lines.add(index, "\n");
+                        // The `String.join` below will add two line breaks.
+                        // One on the left and another on the right.
+                        lines.add(index, "");
                         break;
                     }
                 }
@@ -1419,8 +1470,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                     // Restore the last line break removed by the split before.
                     .append('\n');
             } else {
-                text.append(functionDefRawText)
-                    .append("\n\n");
+                text.append(functionDefRawText);
             }
         }
         return text.toString();
@@ -1559,8 +1609,12 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         if (newlineTerminal != null) {
             text.append(this.visit(newlineTerminal))
                 .append(this.visit(indentTerminal))
-                .append(this.visit(statementsContext))
-                .append(this.visit(dedentTerminal));
+                .append(this.visit(statementsContext));
+            final ParserRuleContext parent = context.getParent();
+            if (parent instanceof PythonParser.Function_def_rawContext) {
+                text.append('\n');
+            }
+            text.append(this.visit(dedentTerminal));
         } else if (simpleStmtsContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitBlock -> simple_stmts");
         }
@@ -1603,7 +1657,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     public String visit(final ParseTree tree) {
         final String ruleName = tree.getClass().getSimpleName();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Enter `{}` text: {}", ruleName, tree.getText());
+            LOGGER.debug("Enter `{}` text: {}\n", ruleName, tree.getText());
         }
         this.ruleVisitCounts.putIfAbsent(ruleName, 0);
         this.ruleVisitCounts.computeIfPresent(ruleName, (ignored, currentCount) -> currentCount + 1);
