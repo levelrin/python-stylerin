@@ -702,7 +702,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
 
     @Override
     public String visitFactor(final PythonParser.FactorContext context) {
-        // todo: use `plusTerminal`, `factorContext`, `minusTerminal`, and `tildeTerminal` with tests.
         final TerminalNode plusTerminal = context.PLUS();
         final PythonParser.FactorContext factorContext = context.factor();
         final TerminalNode minusTerminal = context.MINUS();
@@ -710,7 +709,16 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final PythonParser.PowerContext powerContext = context.power();
         final StringBuilder text = new StringBuilder();
         if (powerContext == null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitFactor -> factor");
+            if (plusTerminal != null) {
+                text.append(this.visit(plusTerminal))
+                    .append(this.visit(factorContext));
+            } else if (minusTerminal != null) {
+                text.append(this.visit(minusTerminal))
+                    .append(this.visit(factorContext));
+            } else if (tildeTerminal != null) {
+                text.append(this.visit(tildeTerminal))
+                    .append(this.visit(factorContext));
+            }
         } else {
             text.append(this.visit(powerContext));
         }
@@ -941,7 +949,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (numberTerminal != null) {
             text.append(this.visit(numberTerminal));
         } else if (tupleContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> tuple");
+            text.append(this.visit(tupleContext));
         } else if (groupContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> group");
         } else if (genexpContext != null) {
@@ -961,6 +969,27 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (ellipsesTerminal != null) {
             text.append(this.visit(ellipsesTerminal));
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitTuple(final PythonParser.TupleContext context) {
+        final TerminalNode lparTerminal = context.LPAR();
+        final PythonParser.Star_named_expressionContext starNamedExpressionContext = context.star_named_expression();
+        final TerminalNode commaTerminal = context.COMMA();
+        final PythonParser.Star_named_expressionsContext starNamedExpressionsContext = context.star_named_expressions();
+        final TerminalNode rparTerminal = context.RPAR();
+        final StringBuilder text =  new StringBuilder();
+        text.append(this.visit(lparTerminal));
+        if (starNamedExpressionContext != null) {
+            text.append(this.visit(starNamedExpressionContext))
+                .append(this.visit(commaTerminal));
+            if (starNamedExpressionsContext != null) {
+                text.append(' ')
+                    .append(this.visit(starNamedExpressionsContext));
+            }
+        }
+        text.append(this.visit(rparTerminal));
         return text.toString();
     }
 

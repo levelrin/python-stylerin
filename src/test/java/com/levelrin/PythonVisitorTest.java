@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatTuple() {
+        this.compare("tuple-before.py", "tuple-after.py");
+    }
+
+    @Test
     void shouldFormatClass() {
         this.compare("class-before.py", "class-after.py");
     }
