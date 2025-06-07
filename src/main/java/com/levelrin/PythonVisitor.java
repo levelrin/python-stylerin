@@ -555,12 +555,23 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (notinBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> notin_bitwise_or");
         } else if (inBitwiseOrContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> in_bitwise_or");
+            text.append(this.visit(inBitwiseOrContext));
         } else if (isnotBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> isnot_bitwise_or");
         } else if (isBitwiseOrContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompare_op_bitwise_or_pair -> is_bitwise_or");
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitIn_bitwise_or(final PythonParser.In_bitwise_orContext context) {
+        final TerminalNode inTerminal = context.IN();
+        final PythonParser.Bitwise_orContext bitwiseOrContext = context.bitwise_or();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(inTerminal))
+            .append(' ')
+            .append(this.visit(bitwiseOrContext));
         return text.toString();
     }
 
@@ -600,14 +611,17 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     @Override
     public String visitBitwise_or(final PythonParser.Bitwise_orContext context) {
         final PythonParser.Bitwise_orContext bitwiseOrContext = context.bitwise_or();
-        // todo: use `vbarTerminal` with tests.
         final TerminalNode vbarTerminal = context.VBAR();
         final PythonParser.Bitwise_xorContext bitwiseXorContext = context.bitwise_xor();
         final StringBuilder text = new StringBuilder();
         if (bitwiseOrContext == null) {
             text.append(this.visit(bitwiseXorContext));
         } else {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitBitwise_or -> bitwise_or");
+            text.append(this.visit(bitwiseOrContext))
+                .append(' ')
+                .append(this.visit(vbarTerminal))
+                .append(' ')
+                .append(this.visit(bitwiseXorContext));
         }
         return text.toString();
     }
@@ -615,14 +629,17 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     @Override
     public String visitBitwise_xor(final PythonParser.Bitwise_xorContext context) {
         final PythonParser.Bitwise_xorContext bitwiseXorContext = context.bitwise_xor();
-        // todo: use `circumflexTerminal` with tests.
         final TerminalNode circumflexTerminal = context.CIRCUMFLEX();
         final PythonParser.Bitwise_andContext bitwiseAndContext = context.bitwise_and();
         final StringBuilder text = new StringBuilder();
         if (bitwiseXorContext == null) {
             text.append(this.visit(bitwiseAndContext));
         } else {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitBitwise_xor -> bitwise_xor");
+            text.append(this.visit(bitwiseXorContext))
+                .append(' ')
+                .append(this.visit(circumflexTerminal))
+                .append(' ')
+                .append(this.visit(bitwiseAndContext));
         }
         return text.toString();
     }
@@ -630,14 +647,17 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
     @Override
     public String visitBitwise_and(final PythonParser.Bitwise_andContext context) {
         final PythonParser.Bitwise_andContext bitwiseAndContext = context.bitwise_and();
-        // todo: use `amperTerminal` with tests.
         final TerminalNode amperTerminal = context.AMPER();
         final PythonParser.Shift_exprContext shiftExprContext = context.shift_expr();
         final StringBuilder text = new StringBuilder();
         if (bitwiseAndContext == null) {
             text.append(this.visit(shiftExprContext));
         } else {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitBitwise_and -> bitwise_and");
+            text.append(this.visit(bitwiseAndContext))
+                .append(' ')
+                .append(this.visit(amperTerminal))
+                .append(' ')
+                .append(this.visit(shiftExprContext));
         }
         return text.toString();
     }
@@ -961,7 +981,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (dictContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> dict");
         } else if (setContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> set");
+            text.append(this.visit(setContext));
         } else if (dictcompContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> dictcomp");
         } else if (setcompContext != null) {
@@ -969,6 +989,18 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (ellipsesTerminal != null) {
             text.append(this.visit(ellipsesTerminal));
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSet(final PythonParser.SetContext context) {
+        final TerminalNode lbraceTerminal = context.LBRACE();
+        final PythonParser.Star_named_expressionsContext star_named_expressionsContext = context.star_named_expressions();
+        final TerminalNode rbraceTerminal = context.RBRACE();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(lbraceTerminal))
+            .append(this.visit(star_named_expressionsContext))
+            .append(this.visit(rbraceTerminal));
         return text.toString();
     }
 
