@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatDictionary() {
+        this.compare("dictionary-before.py", "dictionary-after.py");
+    }
+
+    @Test
     void shouldFormatSets() {
         this.compare("set-before.py", "set-after.py");
     }

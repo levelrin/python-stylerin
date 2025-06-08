@@ -154,7 +154,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (passTerminal != null) {
             text.append(this.visit(passTerminal));
         } else if (delStmtContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> del_stmt");
+            text.append(this.visit(delStmtContext));
         } else if (yieldStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> yield_stmt");
         } else if (assertStmtContext != null) {
@@ -167,6 +167,56 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> global_stmt");
         } else if (nonlocalStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSimple_stmt -> nonlocal_stmt");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitDel_stmt(final PythonParser.Del_stmtContext context) {
+        final TerminalNode delTerminal = context.DEL();
+        final PythonParser.Del_targetsContext delTargetsContext = context.del_targets();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(delTerminal))
+            .append(' ')
+            .append(this.visit(delTargetsContext));
+        return text.toString();
+    }
+
+    @Override
+    public String visitDel_targets(final PythonParser.Del_targetsContext context) {
+        final List<PythonParser.Del_targetContext>  delTargetContexts = context.del_target();
+        final List<TerminalNode> commaTerminals = context.COMMA();
+        final StringBuilder text = new StringBuilder();
+        final PythonParser.Del_targetContext firstDelTargetContext = delTargetContexts.get(0);
+        text.append(this.visit(firstDelTargetContext));
+        if (!commaTerminals.isEmpty()) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitDel_targets -> comma");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitDel_target(final PythonParser.Del_targetContext context) {
+        final PythonParser.T_primaryContext tPrimaryContext = context.t_primary();
+        final TerminalNode dotTerminal = context.DOT();
+        // todo: use `nameContext` with tests.
+        final PythonParser.NameContext nameContext = context.name();
+        final TerminalNode lsqbTerminal = context.LSQB();
+        final PythonParser.SlicesContext slicesContext = context.slices();
+        final TerminalNode rsqbTerminal = context.RSQB();
+        final PythonParser.Del_t_atomContext delTAtomContext = context.del_t_atom();
+        final StringBuilder text = new StringBuilder();
+        if (tPrimaryContext != null) {
+            text.append(this.visit(tPrimaryContext));
+            if (dotTerminal != null) {
+                throw new UnsupportedOperationException("Thje following parsing path is not supported yet: visitDel_target -> dot");
+            } else if (lsqbTerminal != null) {
+                text.append(this.visit(lsqbTerminal))
+                    .append(this.visit(slicesContext))
+                    .append(this.visit(rsqbTerminal));
+            }
+        } else if (delTAtomContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitDel_target -> del_t_atom");
         }
         return text.toString();
     }
@@ -979,7 +1029,7 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (listcompContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> listcomp");
         } else if (dictContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitAtom -> dict");
+            text.append(this.visit(dictContext));
         } else if (setContext != null) {
             text.append(this.visit(setContext));
         } else if (dictcompContext != null) {
@@ -989,6 +1039,78 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (ellipsesTerminal != null) {
             text.append(this.visit(ellipsesTerminal));
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitDict(final PythonParser.DictContext context) {
+        final TerminalNode lbraceTerminal = context.LBRACE();
+        final PythonParser.Double_starred_kvpairsContext doubleStarredKvpairsContext = context.double_starred_kvpairs();
+        final TerminalNode rbraceTerminal = context.RBRACE();
+        final StringBuilder text = new StringBuilder();
+        if (doubleStarredKvpairsContext == null) {
+            text.append(this.visit(lbraceTerminal))
+                .append(this.visit(rbraceTerminal));
+        } else {
+            text.append(this.visit(lbraceTerminal));
+            this.currentIndentLevel++;
+            text.append('\n')
+                .append(INDENT_UNIT.repeat(this.currentIndentLevel))
+                .append(this.visit(doubleStarredKvpairsContext));
+            this.currentIndentLevel--;
+            text.append('\n')
+                .append(INDENT_UNIT.repeat(this.currentIndentLevel))
+                .append(this.visit(rbraceTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitDouble_starred_kvpairs(final PythonParser.Double_starred_kvpairsContext context) {
+        final List<PythonParser.Double_starred_kvpairContext> doubleStarredKvpairContexts = context.double_starred_kvpair();
+        final List<TerminalNode> commaTerminals = context.COMMA();
+        final StringBuilder text = new StringBuilder();
+        final PythonParser.Double_starred_kvpairContext firstDoubleStarredKvpairContext = doubleStarredKvpairContexts.get(0);
+        text.append(this.visit(firstDoubleStarredKvpairContext));
+        for (int index = 1; index < doubleStarredKvpairContexts.size(); index++) {
+            final TerminalNode commaTerminal = commaTerminals.get(index - 1);
+            final PythonParser.Double_starred_kvpairContext doubleStarredKvpairContext = doubleStarredKvpairContexts.get(index);
+            text.append(this.visit(commaTerminal))
+                .append('\n')
+                .append(INDENT_UNIT.repeat(this.currentIndentLevel))
+                .append(this.visit(doubleStarredKvpairContext));
+        }
+        if (doubleStarredKvpairContexts.size() == commaTerminals.size()) {
+            final TerminalNode commaTerminal = commaTerminals.get(commaTerminals.size() - 1);
+            text.append(this.visit(commaTerminal));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitDouble_starred_kvpair(final PythonParser.Double_starred_kvpairContext context) {
+        final TerminalNode doublestarTerminal = context.DOUBLESTAR();
+        // todo: use `bitwiseOrContext` with tests.
+        final PythonParser.Bitwise_orContext bitwiseOrContext = context.bitwise_or();
+        final PythonParser.KvpairContext kvpairContext = context.kvpair();
+        final StringBuilder text = new StringBuilder();
+        if (doublestarTerminal != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitDouble_starred_kvpair -> doublestar");
+        } else if (kvpairContext != null) {
+            text.append(this.visit(kvpairContext));
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitKvpair(final PythonParser.KvpairContext context) {
+        final List<PythonParser.ExpressionContext> expressionContexts = context.expression();
+        final TerminalNode colonTerminal = context.COLON();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(expressionContexts.get(0)))
+            .append(this.visit(colonTerminal))
+            .append(' ')
+            .append(this.visit(expressionContexts.get(1)));
         return text.toString();
     }
 
@@ -1405,7 +1527,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final TerminalNode dotTerminal = context.DOT();
         final PythonParser.NameContext nameContext = context.name();
         final TerminalNode lsqbTerminal =  context.LSQB();
-        // todo: use `slicesContext`, and `rsqbTerminal` with tests.
         final PythonParser.SlicesContext slicesContext = context.slices();
         final TerminalNode rsqbTerminal = context.RSQB();
         final PythonParser.Star_atomContext starAtomContext = context.star_atom();
@@ -1416,7 +1537,9 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
                 text.append(this.visit(dotTerminal))
                     .append(this.visit(nameContext));
             } else if (lsqbTerminal != null) {
-                throw new UnsupportedOperationException("The following parsing path is not supported yet: visitTarget_with_star_atom -> lsqbTerminal");
+                text.append(this.visit(lsqbTerminal))
+                    .append(this.visit(slicesContext))
+                    .append(this.visit(rsqbTerminal));
             }
         } else if (starAtomContext != null) {
             text.append(this.visit(starAtomContext));
