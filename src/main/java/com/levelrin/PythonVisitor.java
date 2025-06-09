@@ -1342,7 +1342,6 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         final PythonParser.NameContext nameContext = context.name();
         final PythonParser.Type_paramsContext typeParamsContext = context.type_params();
         final TerminalNode lparTerminal = context.LPAR();
-        // todo: use `argumentsContext` and `rparTerminal` with tests.
         final PythonParser.ArgumentsContext argumentsContext = context.arguments();
         final TerminalNode rparTerminal = context.RPAR();
         final TerminalNode colonTerminal = context.COLON();
@@ -1355,7 +1354,11 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def_raw -> type_params");
         }
         if (lparTerminal != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitClass_def_raw -> LPAR");
+            text.append(this.visit(lparTerminal));
+            if (argumentsContext != null) {
+                text.append(this.visit(argumentsContext));
+            }
+            text.append(this.visit(rparTerminal));
         }
         text.append(this.visit(colonTerminal))
             .append('\n')
@@ -1637,16 +1640,14 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
             );
             boolean endsWithComments = false;
             for (int index = lines.size() - 1; index >= 0; index--) {
-                if (index > 0) {
-                    final String trimmedPreviousLine = lines.get(index - 1).trim();
-                    if (trimmedPreviousLine.startsWith("#")) {
-                        endsWithComments = true;
-                    } else if (endsWithComments) {
-                        // The `String.join` below will add two line breaks.
-                        // One on the left and another on the right.
-                        lines.add(index, "");
-                        break;
-                    }
+                final String line = lines.get(index).trim();
+                if (line.startsWith("#")) {
+                    endsWithComments = true;
+                } else if (endsWithComments) {
+                    // The `String.join` below will add two linebreaks.
+                    // One on the left and another on the right.
+                    lines.add(index + 1, "");
+                    break;
                 }
             }
             if (endsWithComments) {

@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatInheritance() {
+        this.compare("inheritance-before.py", "inheritance-after.py");
+    }
+
+    @Test
     void shouldFormatDictionary() {
         this.compare("dictionary-before.py", "dictionary-after.py");
     }
