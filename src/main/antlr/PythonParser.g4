@@ -362,11 +362,31 @@ with_item
 // Try statement
 // -------------
 
+// Original:
+// try_stmt
+//     : 'try' ':' block finally_block
+//     | 'try' ':' block except_block+ else_block? finally_block?
+//     | 'try' ':' block except_star_block+ else_block? finally_block?;
 try_stmt
-    : 'try' ':' block finally_block
-    | 'try' ':' block except_block+ else_block? finally_block?
-    | 'try' ':' block except_star_block+ else_block? finally_block?;
+    : firstPartOfTry
+    | secondPartOfTry
+    | thirdPartOfTry
+    ;
 
+// We created this custom rule for easier parsing.
+firstPartOfTry
+    : 'try' ':' block finally_block
+    ;
+
+// We created this custom rule for easier parsing.
+secondPartOfTry
+    : 'try' ':' block except_block+ else_block? finally_block?
+    ;
+
+// We created this custom rule for easier parsing.
+thirdPartOfTry
+    : 'try' ':' block except_star_block+ else_block? finally_block?
+    ;
 
 // Except statement
 // ----------------

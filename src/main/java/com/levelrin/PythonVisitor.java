@@ -1314,12 +1314,78 @@ public final class PythonVisitor extends PythonParserBaseVisitor<String> {
         } else if (forStmtContext != null) {
             text.append(this.visit(forStmtContext));
         } else if (tryStmtContext != null) {
-            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> try_stmt");
+            text.append(this.visit(tryStmtContext));
         } else if (whileStmtContext != null) {
             text.append(this.visit(whileStmtContext));
         } else if (matchStmtContext != null) {
             throw new UnsupportedOperationException("The following parsing path is not supported yet: visitCompound_stmt -> match_stmt");
         }
+        return text.toString();
+    }
+
+    @Override
+    public String visitTry_stmt(final PythonParser.Try_stmtContext context) {
+        final PythonParser.FirstPartOfTryContext firstPartOfTryContext = context.firstPartOfTry();
+        final PythonParser.SecondPartOfTryContext secondPartOfTryContext = context.secondPartOfTry();
+        final PythonParser.ThirdPartOfTryContext thirdPartOfTryContext = context.thirdPartOfTry();
+        final StringBuilder text = new StringBuilder();
+        if (firstPartOfTryContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitTry_stmt -> firstPartOfTry");
+        } else if (secondPartOfTryContext != null) {
+            text.append(this.visit(secondPartOfTryContext));
+        } else if (thirdPartOfTryContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitTry_stmt -> thirdPartOfTry");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitSecondPartOfTry(final PythonParser.SecondPartOfTryContext context) {
+        final TerminalNode tryTerminal = context.TRY();
+        final TerminalNode colonTerminal = context.COLON();
+        final PythonParser.BlockContext blockContext = context.block();
+        final List<PythonParser.Except_blockContext> exceptBlockContexts = context.except_block();
+        final PythonParser.Else_blockContext elseBlockContext = context.else_block();
+        final PythonParser.Finally_blockContext finallyBlockContext = context.finally_block();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(tryTerminal))
+            .append(this.visit(colonTerminal))
+            .append(this.visit(blockContext));
+        for (final PythonParser.Except_blockContext exceptBlockContext : exceptBlockContexts) {
+            text.append(this.visit(exceptBlockContext));
+        }
+        if (elseBlockContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSecondPartOfTry -> else_block");
+        }
+        if (finallyBlockContext != null) {
+            throw new UnsupportedOperationException("The following parsing path is not supported yet: visitSecondPartOfTry -> finally_block");
+        }
+        return text.toString();
+    }
+
+    @Override
+    public String visitExcept_block(final PythonParser.Except_blockContext context) {
+        final TerminalNode exceptTerminal = context.EXCEPT();
+        final PythonParser.ExpressionContext expressionContext = context.expression();
+        final TerminalNode asTerminal = context.AS();
+        // todo: use `nameContext` with tests.
+        final PythonParser.NameContext nameContext = context.name();
+        final TerminalNode colonTerminal = context.COLON();
+        final PythonParser.BlockContext blockContext = context.block();
+        final StringBuilder text = new StringBuilder();
+        text.append(this.visit(exceptTerminal));
+        if (expressionContext != null) {
+            text.append(' ')
+                .append(this.visit(expressionContext));
+            if (asTerminal != null) {
+                text.append(' ')
+                    .append(this.visit(asTerminal))
+                    .append(' ')
+                    .append(this.visit(nameContext));
+            }
+        }
+        text.append(this.visit(colonTerminal))
+            .append(this.visit(blockContext));
         return text.toString();
     }
 

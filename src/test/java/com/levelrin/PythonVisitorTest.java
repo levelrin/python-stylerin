@@ -58,6 +58,11 @@ final class PythonVisitorTest {
     }
 
     @Test
+    void shouldFormatPrivateVariable() {
+        this.compare("private-variable-before.py", "private-variable-after.py");
+    }
+
+    @Test
     void shouldFormatInheritance() {
         this.compare("inheritance-before.py", "inheritance-after.py");
     }
